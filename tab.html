@@ -8,6 +8,14 @@
   </head>
   <body>
     <div class="container">
+      <div class="container">
+        <div ng-controller="MainCtrl">
+          <div id="datetime">
+            <h1>{{ date.raw | date:'hh mm ss' }}</h1>
+            <h2>{{ date.raw | date:'EEEE, MMMM yyyy' }}</h2>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="./js/vendor/angular.min.js"></script>
     <script src="./js/vendor/angular-route.min.js"></script>
