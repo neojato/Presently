@@ -105,6 +105,7 @@ angular.module('myApp', ['ngRoute'])
       var input = tplEl.find('input');
       input.attr('type', tAttrs.type);
       input.attr('ng-model', tAttrs.ngModel);
+      input.attr('timezone', tAttrs.timezone);
       tEle.replaceWith(tplEl);
 
       return function(scope, ele, attrs, ctrl) {
@@ -126,6 +127,7 @@ angular.module('myApp', ['ngRoute'])
                 if (data && data.length > 0) {
                   scope.reslist = data;
                   scope.ngModel = data[0].zmw;
+                  scope.timezone = data[0].tz;
                 }
               });
             }, 300);
@@ -147,7 +149,7 @@ angular.module('myApp', ['ngRoute'])
 
   // Update function
   var updateTime = function() {
-    $scope.date.raw = new Date();
+    $scope.date.tz = new Date(new Date().toLocaleString("en-US", {timeZone: $scope.user.timezone}));
     $timeout(updateTime, 1000);
   }
 
