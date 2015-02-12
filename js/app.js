@@ -30,6 +30,18 @@ angular.module('myApp', ['ngRoute'])
           d.reject(err);
         });
         return d.promise;
+      },
+      getCityDetails: function(query) {
+        var d = $q.defer();
+        $http({
+          method: 'GET',
+          url: 'http://autocomplete.wunderground.com/aq?query=' + query
+        }).success(function(data) {
+          d.resolve(data.RESULTS);
+        }).error(function(err) {
+          d.reject(err);
+        });
+        return d.promise;
       }
     }
   }
@@ -60,13 +72,11 @@ angular.module('myApp', ['ngRoute'])
   var service = {
     user: {},
     save: function() {
-      sessionStorage.presently =
-        angular.toJson(service.user);
+      sessionStorage.presently = angular.toJson(service.user);
     },
     restore: function() {
       // Pull from sessionStorage
-      service.user =
-        angular.fromJson(sessionStorage.presently) || defaults
+      service.user = angular.fromJson(sessionStorage.presently) || defaults;
 
       return service.user;
     }
@@ -96,8 +106,36 @@ angular.module('myApp', ['ngRoute'])
       input.attr('type', tAttrs.type);
       input.attr('ng-model', tAttrs.ngModel);
       tEle.replaceWith(tplEl);
+
       return function(scope, ele, attrs, ctrl) {
-        // Our link function
+        var minKeyCount = attrs.minKeyCount || 3,
+            timer,
+            input = ele.find('input');
+
+        input.bind('keyup', function(e) {
+          val = ele.val();
+          if (val.length < minKeyCount) {
+            if (timer) $timeout.cancel(timer);
+            scope.reslist = null;
+            return;
+          } else {
+            if (timer) $timeout.cancel(timer);
+            timer = $timeout(function() {
+              scope.autoFill()(val)
+              .then(function(data) {
+                if (data && data.length > 0) {
+                  scope.reslist = data;
+                  scope.ngModel = data[0].zmw;
+                }
+              });
+            }, 300);
+          }
+        });
+        // Hide the reslist on blur
+        input.bind('blur', function(e) {
+          scope.reslist = null;
+          scope.$digest();
+        });
       }
     }
   }
@@ -124,9 +162,9 @@ angular.module('myApp', ['ngRoute'])
   updateTime();
 })
 
-.controller('SettingsCtrl',
-  function($scope, UserService) {
+.controller('SettingsCtrl', function($scope, UserService, Weather) {
     $scope.user = UserService.user;
+    $scope.fetchCities = Weather.getCityDetails;
 
     $scope.save = function() {
       UserService.save();
